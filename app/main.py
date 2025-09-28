@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.db import engine, Base
-from app.routes import auth, wallet, transaction
+from app.db.session import engine, Base
+from app.routers import auth, wallet, transaction
 
 app = FastAPI(title="Carteira Digital Inteligente")
 
