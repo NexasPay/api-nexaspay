@@ -1,8 +1,8 @@
 from uuid_extensions import uuid7
-from enum import Enum
 from collections import defaultdict
 from sqlalchemy import Integer, String, TIMESTAMP, DATETIME, ForeignKey, UUID, DECIMAL
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
+from .enums import WalletTypeEnum, PhoneTypeEnum, TransactionTypeEnum
 
 class Base(DeclarativeBase):
     pass
@@ -142,24 +142,5 @@ class Country(Base):
     __tablename__ = "Country"
     country_id: Mapped[uuid7] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid7)
     name: Mapped[str] = mapped_column(String(30), nullable=False)
-
-
-class WalletTypeEnum(Enum):
-    DEFAULT = "DEFAULT"
-    ENTERPRISE = "ENTERPRISE"
-    CRYPTO = "CRYPTO"
-    POINTS = "POINTS"
-    INVESTMENT = "INVESTMENT"
-
-class TransactionTypeEnum(Enum):
-    DEPOSIT = "DEPOSIT"
-    PICKUP = "PICKUP" # Saque
-    PAYMENT = "PAYMENT"
-    TRANSFER = "TRANSFER"
-
-class PhoneTypeEnum(Enum):
-    MOBILE = "MOBILE"
-    BUSINESS = "BUSINESS"
-    HOME = "HOME"
 
 
