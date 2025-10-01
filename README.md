@@ -1,5 +1,8 @@
 # 🚀 NexasPay API
 
+> [!IMPORTANT]
+> **API AINDA EM DESENVOLVIMENTO EM FASE DE TESTES!**
+
 Bem-vindo à **NexasPay API**, o coração do nosso sistema de carteira digital inteligente. Esta API foi desenvolvida para oferecer uma plataforma robusta, segura e escalável para gerenciamento de usuários, carteiras e transações financeiras.
 
 [](https://www.google.com/search?q=https://github.com/seu-usuario/nexaspay-api)
@@ -121,3 +124,4 @@ A documentação interativa da API (gerada automaticamente pelo FastAPI) está d
   * `POST /create`: Cria uma nova transação entre duas carteiras.
 
 -----
+
