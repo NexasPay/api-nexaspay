@@ -1,12 +1,14 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from fastapi import Depends
+from sqlmodel import SQLModel, Session, create_engine
 from app import database_url
 
-engine = create_async_engine(database_url, future=True, echo=False)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-Base = declarative_base()
+engine = create_engine(database_url, echo=True)
 
-
-async def init_db():
-    async with AsyncSessionLocal() as session:
+def get_session():
+    with Session(engine) as session:
         yield session
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+SessionDep = Depends(get_session)

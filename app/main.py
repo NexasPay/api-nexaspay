@@ -1,15 +1,14 @@
 from fastapi import FastAPI
-from app.db.session import engine, Base
-from app.routers import auth, wallet, transaction
+from app.db.session import init_db
+from app.routers import auth, wallet, transfer
 
-app = FastAPI(title="Carteira Digital Inteligente")
 
+app = FastAPI()
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(wallet.router, prefix="/wallet", tags=["Wallet"])
-app.include_router(transaction.router, prefix="/transaction", tags=["Transaction"])
+app.include_router(transfer.router, prefix="/transaction", tags=["Transfer"])
 
 @app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+def on_startup():
+    init_db()
