@@ -8,7 +8,7 @@ class WalletTypeEnum(Enum):
     INVESTMENT = "INVESTMENT"
 
 
-class TransactionTypeEnum(Enum):
+class TransferTypeEnum(Enum):
     DEPOSIT = "DEPOSIT"
     PICKUP = "PICKUP"   # Saque
     PAYMENT = "PAYMENT"
@@ -19,3 +19,10 @@ class PhoneTypeEnum(Enum):
     MOBILE = "MOBILE"
     BUSINESS = "BUSINESS"
     HOME = "HOME"
+
+
+class ClassType(Enum):
+    USERS = "USR"
+    WALLET = "WLT"
+    TRANSFER = "TRF"
+    NEXAS = "NAI"

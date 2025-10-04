@@ -19,4 +19,5 @@ class User(SQLModel, table=True):
     profile_photo: str | None = Field(default=None)
     is_deleted: bool = Field(default=False)
 
+
     phones: List["Phone"] = Relationship(back_populates="user")

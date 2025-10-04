@@ -5,8 +5,10 @@ sqlmodel
 uuid7
 boto3
 python-jose[cryptography]
+pyjwt
+pwdlib[argon2]
 requests
 scikit-learn
 pandas
-passlib[bcrypt]
 python-dotenv
+cryptography

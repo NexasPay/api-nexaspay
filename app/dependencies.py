@@ -9,15 +9,6 @@ from fastapi import Header, HTTPException, Depends
 from app import secret_key
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import init_db
-
-async def get_token_header(x_token: Annotated[str, Header()]):
-    if x_token != secret_key:
-        raise HTTPException(status_code=400, detail="X-Token header invalid")
-
-
-async def get_query_token(token: str):
-    if token != "jessica":
-        raise HTTPException(status_code=400, detail="No Jessica token provided")
     
 
 async def getDbData() -> AsyncSession: 

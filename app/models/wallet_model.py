@@ -13,9 +13,17 @@ class Wallet(SQLModel, table=True):
     money: float = Field(default=0.0)
     is_deleted: bool = Field(default=False)
 
-    user_id: UUID = Field(foreign_key="User.user_id", nullable=False)
-    wallet_type_id: UUID = Field(foreign_key="Wallet_Type.wallet_type_id", nullable=False)
+    user_id: UUID = Field(foreign_key="user.user_id", nullable=False)
+    wallet_type_id: UUID = Field(foreign_key="wallet_type.wallet_type_id", nullable=False)
 
     user: "User" = Relationship()
     wallet_type: "Wallet_Type" = Relationship()
-    transactions: list["Transfer"] = Relationship(back_populates="origin_wallet")
+    
+    sent_transfers: list["Transfer"] = Relationship(
+        back_populates="origin_wallet",
+        sa_relationship_kwargs={"foreign_keys": "[Transfer.origin_wallet_id]"},
+    )
+    received_transfers: list["Transfer"] = Relationship(
+        back_populates="target_wallet",
+        sa_relationship_kwargs={"foreign_keys": "[Transfer.target_wallet_id]"},
+    )

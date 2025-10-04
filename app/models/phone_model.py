@@ -12,8 +12,8 @@ class Phone(SQLModel, table=True):
     number: str = Field(nullable=False)
     is_primary: bool = Field(default=False)
 
-    user_id: UUID = Field(foreign_key="User.user_id", nullable=False)
-    phone_type_id: UUID = Field(foreign_key="PhoneType.phone_type_id", nullable=False)
+    user_id: UUID = Field(foreign_key="user.user_id", nullable=False)
+    phone_type_id: UUID = Field(foreign_key="phonetype.phone_type_id", nullable=False)
 
     user: "User" = Relationship(back_populates="phones")
-    phone_type: "PhoneType" = Relationship()
+    phone_type: "PhoneType" = Relationship(back_populates="phones")

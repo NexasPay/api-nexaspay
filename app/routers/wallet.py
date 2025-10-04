@@ -7,7 +7,7 @@ from uuid_extensions import uuid7
 
 router = APIRouter()
 
-@router.get("wallet/{wallet_id}")
+@router.get("/{wallet_id}")
 async def getAllWallets(wallet_id):
     return {"wallet_id": wallet_id, "money": 1000}
 

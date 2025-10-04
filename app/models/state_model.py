@@ -8,6 +8,6 @@ class State(SQLModel, table=True):
     name: str = Field(nullable=False)
     uf: str = Field(nullable=False)
 
-    country_id: UUID = Field(foreign_key="Country.country_id", nullable=False)
+    country_id: UUID = Field(foreign_key="country.country_id", nullable=False)
 
     country: "Country" = Relationship()

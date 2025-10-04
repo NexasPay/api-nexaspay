@@ -10,6 +10,6 @@ class Address(SQLModel, table=True):
     complement: str | None = Field(default=None)
     cep: str = Field(nullable=False)
 
-    city_id: UUID = Field(foreign_key="City.city_id", nullable=False)
+    city_id: UUID = Field(foreign_key="city.city_id", nullable=False)
 
     city: "City" = Relationship()

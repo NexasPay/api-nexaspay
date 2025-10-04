@@ -7,7 +7,7 @@ from app.models.transfer_model import Transfer
 router = APIRouter()
 
 # Only for test
-@router.get("/transaction/{transfer_id}")
+@router.get("/transfer/{transfer_id}")
 async def readTransaction(transfer_id: int):
     return {"transfer_id": transfer_id}
     
