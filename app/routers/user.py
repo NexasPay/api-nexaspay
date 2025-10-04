@@ -22,7 +22,7 @@ class ProfilePhotoModel(BaseModel):
 
 class CreateUserFormData(BaseModel):
     full_name: str = Field(alias="NomeCompleto")
-    birhtdate: datetime = Field(alias="DataNascimento")
+    birthdate: datetime = Field(alias="DataNascimento") 
     email: str = Field(alias="Email")
     phone: str = Field(alias="Celular")
     password: str = Field(alias="Senha")
