@@ -1,6 +1,8 @@
 fastapi[standard]
 uvicorn[standard]
-psycopg2-binary
+asyncpg
+sqlmodel
+uuid7
 boto3
 python-jose[cryptography]
 requests

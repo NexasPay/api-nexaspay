@@ -10,5 +10,5 @@ app.include_router(wallet.router, prefix="/wallet", tags=["Wallet"])
 app.include_router(transfer.router, prefix="/transaction", tags=["Transfer"])
 
 @app.on_event("startup")
-def on_startup():
-    init_db()
+async def on_startup():
+    await init_db()

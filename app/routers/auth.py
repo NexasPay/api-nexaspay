@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.dependencies import getDbData
 from pydantic import BaseModel
 import datetime
+from app.db.session import AsyncSessionDep
 from jose import jwt
 from app import secret_key
 from app.models.user_model import User
@@ -11,7 +12,7 @@ router = APIRouter()
 
 # Only for test
 @router.get("/auth/{user_id}")
-async def authUser(user_id: int):
+async def authUser(user_id: int, session: AsyncSessionDep):
     return "Confirmed!"
 
 # class UserCreate(BaseModel):
