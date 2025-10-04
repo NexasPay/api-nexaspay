@@ -29,8 +29,15 @@ class CreateUserFormData(BaseModel):
     cpf: str = Field(alias="CPF")
 
 @router.get("/{userId}", response_model=User, name="Obtendo informações do usuário")
-async def getUserDetails(userId: UUID):
-    pass
+async def getUserDetails(userFriendlyCode: str):
+    
+    async with async_session() as session:
+        statement = await session.select(User).where(User.user_id == userId)
+        result = await session.exec(statement)
+        for user in result:
+            print(user)
+
+    
 
 @router.post("/create", name="Criando novo usuário")
 async def createNewUser(data: Annotated[CreateUserFormData, Form()]):
@@ -47,7 +54,7 @@ async def createNewUser(data: Annotated[CreateUserFormData, Form()]):
         profile_photo=None,
         is_deleted=False
     )
-    userPhone = Phone(phone_id=uuid7(), number=data.phone, is_primary=False, user_id=newUser.user_id)
+    # userPhone = Phone(phone_id=uuid7(), number=data.phone, is_primary=False, user_id=newUser.user_id)
     
     async with async_session() as session:
         session.add(newUser)

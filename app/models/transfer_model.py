@@ -18,7 +18,7 @@ class Transfer(SQLModel, table=True):
 
     origin_wallet_id: UUID = Field(foreign_key="wallet.wallet_id", nullable=False)
     target_wallet_id: UUID | None = Field(foreign_key="wallet.wallet_id")
-    transfer_type_id: UUID = Field(foreign_key="transfertype.trasnfer_type_id", nullable=False)
+    transfer_type_id: UUID = Field(foreign_key="transfertype.transfer_type_id", nullable=False)
 
     origin_wallet: "Wallet" = Relationship(
         back_populates="sent_transfers",
