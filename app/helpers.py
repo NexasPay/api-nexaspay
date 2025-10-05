@@ -21,12 +21,12 @@ def generateFriendlyCode(codeype: ClassType):
 def calculateScorePoints(value: float, transferName: str, session: SessionDep) -> int:
     try:
         type_variables = {
-            "Pickup": 0.3,
-            "Deposit": 0.6,
-            "Transfer": 0.7,
-            "Pix": 0.8,
-            "Invest": 1.2,
-            "Crypto": 1.4
+            "pickup": 0.3,
+            "deposit": 0.6,
+            "transfer": 0.7,
+            "pix": 0.8,
+            "invest": 1.2,
+            "crypto": 1.4
         }.get(transferName.lower(), 1.0)
 
         newPoints = (math.sqrt(value) / 4) * (type_variables * 1.2)
