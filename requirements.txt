@@ -1,6 +1,7 @@
 fastapi[standard]
 uvicorn[standard]
 psycopg2-binary
+pydantic
 sqlmodel
 uuid7
 boto3

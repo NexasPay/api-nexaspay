@@ -7,6 +7,7 @@ from app.models.wallet_model import Wallet
 from app.models.transfer_model import Transfer
 from app.models.transferType_model import TransferType
 from app.routers.wallet import findWalletByUUID, cashInToUserWallet, getWalletTypeByName, cashOutFromUserWallet
+from app.routers.user import getUserDetailsByUUID
 from uuid import UUID
 from typing import Literal
 from uuid_extensions import uuid7
@@ -45,6 +46,7 @@ async def makePaymentToTarget(transferType: Literal["TRANSFER", "CRYPTO", "PIX"]
             transfer_type_id=result.transfer_type_id
         )
 
+        
         session.add(transferinfos)
         session.commit()
         session.refresh(transferinfos)

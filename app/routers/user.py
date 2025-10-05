@@ -36,20 +36,40 @@ class CreateUserFormData(BaseModel):
     password: str = Field(alias="Senha")
     cpf: str = Field(alias="CPF")
 
-@router.get("/{userFriendlyCode}", name="Obtendo detalhes sobre o cliente Nexas Pay")
+@router.get("/search/{userFriendlyCode}", name="Obtendo detalhes sobre o cliente Nexas Pay pelo FriendlyCode")
 async def getUserDetails(userFriendlyCode: str, session: SessionDep):
-    statement = select(Users).where(Users.friendly_code == userFriendlyCode)
-    user = session.exec(statement).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    return user
+    try:
+        statement = select(Users).where(Users.friendly_code == userFriendlyCode)
+        user = session.exec(statement).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Ocorreu um erro na pesquisa de usuário")
+        print(e)
+
+@router.get("/search/{userUUID}", name="Obtendo detalhes sobre o cliente Nexas Pay pelo UUID")
+async def getUserDetailsByUUID(userUUID: UUID, session: SessionDep):
+    try:
+        statement = select(Users).where(Users.user_id == userUUID)
+        user = session.exec(statement).first()
+        if not user:
+            raise HTTPException(status_code=400, detail="Usuário não encontrado.")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Ocorreu um erro na pesquisa de usuário")
+        print(e)
     
 @router.get("/score/{userFriendlyCode}", name="Procurando pelo Score de um usuário a partir de seu friendlyCode")
 async def getScoreFromUserCode(userFriendlyCode: str, session: SessionDep):
     statement = select(Users).where(Users.friendly_code == userFriendlyCode)
     user: Users = session.exec(statement).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.", valid=False)
+        raise HTTPException(status_code=400, detail="Usuário não encontrado.", valid=False)
     return user.score
 
 @router.get("/wallets/{userFriendlyCode}", name="Procurando pela carteira de um usuário")
@@ -107,7 +127,7 @@ async def createNewUser(data: Annotated[CreateUserFormData, Form()], session: Se
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Ocorreu um erro ao criar o usuário: {e}")
+        raise HTTPException(status_code=500, detail=f"Ocorreu um erro ao criar o usuário: {e}")
         #raise
 
 @router.post("/create/wallet/{userFriendlyCode}", name="Criando uma nova carteira para o usuário")
@@ -148,7 +168,7 @@ async def increaseScorePoints(userFriendlyCode:str, paymentValue: float, session
     statement = select(Users).where(Users.friendly_code == userFriendlyCode)
     user: Users = session.exec(statement).first()
     if not user:
-        raise HTTPException(status_code=404, detail='Usuário não encontrado')
+        raise HTTPException(status_code=400, detail='Usuário não encontrado')
 
     if paymentValue <= 0 or paymentValue > 50000:
         raise HTTPException(status_code=400, detail='Valor inválido para operação')
