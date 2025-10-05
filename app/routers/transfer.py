@@ -15,7 +15,7 @@ from datetime import datetime
 router = APIRouter()
 
 @router.post("/{transferType}/from/{originWalletId}/{originValue}/to/{targetWalletId}", name="Realize transferências entre Carteiras")
-async def makePaymentToTarget(originWalletId: UUID, originValue: int, targetWalletId: UUID, session: SessionDep, transferType: Literal["TRANSFER", "CRYPTO", "PIX"] = "PIX"):
+async def makePaymentToTarget(transferType: Literal["TRANSFER", "CRYPTO", "PIX"], originWalletId: UUID, originValue: int, targetWalletId: UUID, session: SessionDep):
     try:
         if originValue < 0:
             raise HTTPException(status_code=400, detail="Valor de pagamento inválido.")
@@ -26,8 +26,12 @@ async def makePaymentToTarget(originWalletId: UUID, originValue: int, targetWall
         await cashOutFromUserWallet(originWallet.friendly_code, originValue, session)
         await cashInToUserWallet(targetWallet.friendly_code, originValue, session)
 
-        statement = select(TransferType).where(TransferType.transfer_type_name == transferType)
-        result = session.exec(statement).first()
+        result = session.exec(select(TransferType).where(TransferType.transfer_type_name == transferType)).scalars().first()
+
+
+        if not result:
+            raise HTTPException(status_code=404, detail=f"Tipo de transferência '{transferType}' não encontrado.")
+
 
         transferinfos = Transfer(
             transfer_id=uuid7(),
@@ -55,4 +59,4 @@ async def makePaymentToTarget(originWalletId: UUID, originValue: int, targetWall
         raise
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=404, detail=f"{e}")
+        raise
