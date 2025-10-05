@@ -9,7 +9,7 @@ from app.models.phoneType_model import PhoneType
 from app.models.address_model import Address
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional, Literal, List
-from app.helpers import generateFriendlyCode, ClassType, calculateScorePoints
+from app.helpers import generateFriendlyCode, ClassType, calculateScorePoints, converDatetimeDelta
 from datetime import datetime
 from sqlmodel import select
 from app.internal.cryptography import encryptCPF
@@ -36,7 +36,7 @@ class CreateUserFormData(BaseModel):
     password: str = Field(alias="Senha")
     cpf: str = Field(alias="CPF")
 
-@router.get("/{userFriendlyCode}", name="Obtendo informações do usuário")
+@router.get("/{userFriendlyCode}", name="Obtendo detalhes sobre o cliente Nexas Pay")
 async def getUserDetails(userFriendlyCode: str, session: SessionDep):
     statement = select(Users).where(Users.friendly_code == userFriendlyCode)
     user = session.exec(statement).first()
@@ -44,42 +44,7 @@ async def getUserDetails(userFriendlyCode: str, session: SessionDep):
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     return user
     
-
-@router.post("/create", name="Criando novo usuário")
-async def createNewUser(data: Annotated[CreateUserFormData, Form()], session: SessionDep):
-    
-    try:
-
-        newUser = Users(
-            user_id=uuid7(),
-            friendly_code=generateFriendlyCode(ClassType.USERS),
-            fullname=data.fullname,
-            birthdate=data.birthdate,
-            email=data.email,
-            password=encryptPassword(data.password),
-            cpf=encryptCPF(data.cpf),
-            created_at=datetime.now(),
-            user_photo=None,
-            is_deleted=False
-        )
-        uuid = 'c1266dad-16f7-44d9-9009-f5510378fb2d'
-        userPhone = Phone(phone_id=uuid7(), phone_number=data.phone, is_primary=False, user_id=newUser.user_id, phone_type_id=uuid)
-        userAddress = Address(address_id=uuid7(), street=data.street, complement=data.complement, address_number=data.address_number, cep=data.cep, city_id=None)
-        userAddressTable = UsersAddress(user_id=newUser.user_id, address_id=userAddress.address_id)
-
-        session.add(newUser)
-        session.add(userPhone)
-        session.add(userAddress)
-        session.add(userAddressTable)
-        session.commit()
-        session.refresh(newUser)
-        
-        return newUser
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=404, detail=f"Ocorreu um erro ao criar o usuário")
-
-@router.get("/{userFriendlyCode}/score", name="Procurando pelo Score de um usuário a partir de seu friendlyCode")
+@router.get("/score/{userFriendlyCode}", name="Procurando pelo Score de um usuário a partir de seu friendlyCode")
 async def getScoreFromUserCode(userFriendlyCode: str, session: SessionDep):
     statement = select(Users).where(Users.friendly_code == userFriendlyCode)
     user: Users = session.exec(statement).first()
@@ -87,24 +52,7 @@ async def getScoreFromUserCode(userFriendlyCode: str, session: SessionDep):
         raise HTTPException(status_code=404, detail="Usuário não encontrado.", valid=False)
     return user.score
 
-@router.put("/{userFriendlyCode}/score/increase")
-async def increaseScorePoints(userFriendlyCode:str, paymentValue: float, session: SessionDep, transferType: Literal["Deposit", "Pix", "Pickup", "Transfer", "Crypto", "Invest"] = "Pix"):
-    statement = select(Users).where(Users.friendly_code == userFriendlyCode)
-    user: Users = session.exec(statement).first()
-    if not user:
-        raise HTTPException(status_code=404, detail='Usuário não encontrado')
-
-    if paymentValue <= 0 or paymentValue > 50000:
-        raise HTTPException(status_code=400, detail='Valor inválido para operação')
-
-    user.score += calculateScorePoints(value=paymentValue, transferName=transferType, session=session)
-
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return {"Score Atual": user.score, "Valid": True} 
-
-@router.get("/{userFriendlyCode}/wallets", name="Procurando pela carteira de um usuário")
+@router.get("/wallets/{userFriendlyCode}", name="Procurando pela carteira de um usuário")
 async def getWalletsFromUsers(userFriendlyCode: str, session: SessionDep):
     
     try:
@@ -124,9 +72,45 @@ async def getWalletsFromUsers(userFriendlyCode: str, session: SessionDep):
         print(e)
         raise
 
+@router.post("/create", name="Criando novo usuário")
+async def createNewUser(data: Annotated[CreateUserFormData, Form()], session: SessionDep):
+    try:
+        if ((datetime.today() - data.birthdate).days // 365) < 18 or data.birthdate.year < 1930:
+            raise HTTPException(status_code=400, detail="Data de aniversário inválida. Você não possuí a idade adequada para acessar o nosso sistema!")
 
+        newUser = Users(
+            user_id=uuid7(),
+            friendly_code=generateFriendlyCode(ClassType.USERS),
+            fullname=data.fullname,
+            birthdate=data.birthdate,
+            email=data.email,
+            password=encryptPassword(data.password),
+            cpf=encryptCPF(data.cpf),
+            created_at=datetime.now(),
+            user_photo=None,
+            is_deleted=False
+        )
+        uuid = 'c1266dad-16f7-44d9-9009-f5510378fb2d'
+        #uuid = uuid7()
+        userPhone = Phone(phone_id=uuid7(), phone_number=data.phone, is_primary=False, user_id=newUser.user_id, phone_type_id=uuid)
+        userAddress = Address(address_id=uuid7(), street=data.street, complement=data.complement, address_number=data.address_number, cep=data.cep, city_id=None)
+        userAddressTable = UsersAddress(user_id=newUser.user_id, address_id=userAddress.address_id)
 
-@router.post("/{userFriendlyCode}/wallet/new", name="Criando uma nova carteira para o usuário")
+        session.add(newUser)
+        session.add(userPhone)
+        session.add(userAddress)
+        session.add(userAddressTable)
+        session.commit()
+        session.refresh(newUser)
+        
+        return newUser
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Ocorreu um erro ao criar o usuário: {e}")
+        #raise
+
+@router.post("/create/wallet/{userFriendlyCode}", name="Criando uma nova carteira para o usuário")
 async def createNewWalletForUser(userFriendlyCode: str, session: SessionDep, walletType: Literal["Default", "Enterprise", "Crypto", "Investment"] = "Default"):
     try:
         user = await getUserDetails(userFriendlyCode, session)
@@ -158,3 +142,22 @@ async def createNewWalletForUser(userFriendlyCode: str, session: SessionDep, wal
     except Exception as e:
         print(e)
         raise HTTPException(status_code=404, detail="Ocorreu um erro durante o processo de criar uma carteira")
+
+@router.patch("/score/increase/{userFriendlyCode}/", name="Aumente o score partindo de um friendly code")
+async def increaseScorePoints(userFriendlyCode:str, paymentValue: float, session: SessionDep, transferType: Literal["Deposit", "Pix", "Pickup", "Transfer", "Crypto", "Invest"] = "Pix"):
+    statement = select(Users).where(Users.friendly_code == userFriendlyCode)
+    user: Users = session.exec(statement).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Usuário não encontrado')
+
+    if paymentValue <= 0 or paymentValue > 50000:
+        raise HTTPException(status_code=400, detail='Valor inválido para operação')
+
+    user.score += calculateScorePoints(value=paymentValue, transferName=transferType, session=session)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"Score Atual": user.score, "Valid": True} 
+
+

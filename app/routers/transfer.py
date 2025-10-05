@@ -60,3 +60,7 @@ async def makePaymentToTarget(transferType: Literal["TRANSFER", "CRYPTO", "PIX"]
     except Exception as e:
         print(e)
         raise
+
+@router.post("/invest/{originWalletID}/{value}", name="Realize transferências entre suas carteiras de investimentos")
+async def sendToInvestmentAccount(originWalletID: UUID, value: int):
+    return {"message": "Em construção"}

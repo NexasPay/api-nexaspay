@@ -2,13 +2,16 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import base64
 from dotenv import load_dotenv
 from os import getenv
+from fastapi import HTTPException
             
 def encryptCPF(cpf: str) -> str:
     """
     Encrypt CPF from user
     """
     if not cpf.isnumeric():
-        raise Exception("CPF deve conter somente números")
+        raise HTTPException(status_code=400, detail="CPF deve conter somente números")
+    if len(cpf) < 11:
+        raise HTTPException(status_code=400, detail="CPF deve conter 11 caractéres exatas")
     load_dotenv()
     hashKey = bytes.fromhex(getenv('SECRET_HASH_KEY')) 
     nonce = bytes.fromhex(getenv('NONCE'))

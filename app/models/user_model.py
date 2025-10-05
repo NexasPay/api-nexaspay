@@ -3,6 +3,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from uuid import UUID
 from typing import Optional
 from uuid_extensions import uuid7
+from pydantic import EmailStr
 from datetime import datetime
 from app.models.useraddress_model import UsersAddress
 
@@ -14,10 +15,10 @@ class Users(SQLModel, table=True):
     friendly_code: str = Field(nullable=False)
     fullname: str = Field(nullable=False)
     birthdate: datetime = Field(nullable=False)
-    email: str = Field(nullable=False)
+    email: EmailStr = Field(nullable=False)
     password: str = Field(nullable=False)
     cpf: str = Field(nullable=False)
-    score: int = Field(nullable=False, default_factory=0)
+    score: int = Field(nullable=False, default_factory=lambda: 0)
     created_at: datetime = Field(default_factory=datetime.now)
     user_photo: str | None = Field(default=None)
     is_deleted: bool = Field(default=False)

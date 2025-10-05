@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from sqlmodel import select
 from uuid import UUID
 import math
-
+from datetime import datetime
 
 def generateFriendlyCode(codeType: ClassType):
     """
@@ -37,3 +37,20 @@ def calculateScorePoints(value: float, transferName: str, session: SessionDep) -
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Operação de pontos teve falha.")
+
+def converDatetimeDelta(delta):
+    totalDays = delta.days
+    years = totalDays // 365
+    months = (totalDys % 365) // 30
+    days = (totalDays % 365) % 30
+    return datetime(years, months, days)
+
+def validate_birth_date(birth_date: datetime):
+    today = datetime.now()
+    age = today.year - birth_date.year - (
+        (today.month, today.day) < (birth_date.month, birth_date.day)
+    )
+
+    if age < 18 or birth_date.year < 1930:
+        raise
+    return age
