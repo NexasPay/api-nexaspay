@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.dependencies import getDbData
 from app.db.session import SessionDep
-from sqlalchemy.future import select
+from sqlalchemy import select
 from app.helpers import generateFriendlyCode, ClassType
 from app.models.wallet_model import Wallet
 from app.models.transfer_model import Transfer
@@ -14,19 +14,21 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.post("{transferType}/from/{originWalletId}/{originValue}/to/{targetWalletId}")
-async def makePaymentToTarget(targetWalledId: UUID, originWalletId: UUID, originValue: int, session: SessionDep, transferType: Literal["TRANSFER", "CRYPTO", "PIX"] = "PIX"):
+@router.post("/{transferType}/from/{originWalletId}/{originValue}/to/{targetWalletId}", name="Realize transferências entre Carteiras")
+async def makePaymentToTarget(originWalletId: UUID, originValue: int, targetWalletId: UUID, session: SessionDep, transferType: Literal["TRANSFER", "CRYPTO", "PIX"] = "PIX"):
     try:
         if originValue < 0:
             raise HTTPException(status_code=400, detail="Valor de pagamento inválido.")
 
-        targetWallet: Wallet = await findWalletByUUID(walletUUID=targetWalledId, session=session)
+        targetWallet: Wallet = await findWalletByUUID(walletUUID=targetWalletId, session=session)
         originWallet: Wallet = await findWalletByUUID(walletUUID=originWalletId, session=session)
 
         await cashOutFromUserWallet(originWallet.friendly_code, originValue, session)
         await cashInToUserWallet(targetWallet.friendly_code, originValue, session)
 
-        result = session.exec(select(TransferType).where(TransferType.transfer_type_name == transferType)).first()
+        statement = select(TransferType).where(TransferType.transfer_type_name == transferType)
+        result = session.exec(statement).first()
+
         transferinfos = Transfer(
             transfer_id=uuid7(),
             friendly_code=generateFriendlyCode(ClassType.TRANSFER),
@@ -39,9 +41,18 @@ async def makePaymentToTarget(targetWalledId: UUID, originWalletId: UUID, origin
             transfer_type_id=result.transfer_type_id
         )
 
+        session.add(transferinfos)
+        session.commit()
+        session.refresh(transferinfos)
 
-        return {"transferValid": True, "originWalletCurrentMoney": originWallet.money, "targetWalletCurrentMoney": targetWallet.money, "TransferInfos": transferinfos}
+        return {
+                "transferValid": True, 
+                "originWalletCurrentMoney": originWallet.money, 
+                "targetWalletCurrentMoney": targetWallet.money, 
+                "TransferInfos": transferinfos
+            }
     except HTTPException:
         raise
     except Exception as e:
         print(e)
+        raise HTTPException(status_code=404, detail=f"{e}")
