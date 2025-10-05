@@ -3,7 +3,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from uuid import UUID
 from uuid_extensions import uuid7
 from .user_model import Users
-from .walletType_model import Wallet_Type
+from .walletType_model import WalletType
 if TYPE_CHECKING:
     from .transfer_model import Transfer
 
@@ -14,10 +14,10 @@ class Wallet(SQLModel, table=True):
     is_deleted: bool = Field(default=False)
 
     user_id: UUID = Field(foreign_key="users.user_id", nullable=False)
-    wallet_type_id: UUID = Field(foreign_key="wallet_type.wallet_type_id", nullable=False)
+    wallet_type_id: UUID = Field(foreign_key="wallettype.wallet_type_id", nullable=False)
 
     user: "Users" = Relationship()
-    wallet_type: "Wallet_Type" = Relationship()
+    wallettype: "WalletType" = Relationship()
     
     sent_transfers: list["Transfer"] = Relationship(
         back_populates="origin_wallet",

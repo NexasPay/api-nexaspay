@@ -4,7 +4,6 @@ class WalletTypeEnum(Enum):
     DEFAULT = "DEFAULT"
     ENTERPRISE = "ENTERPRISE"
     CRYPTO = "CRYPTO"
-    POINTS = "POINTS"
     INVESTMENT = "INVESTMENT"
 
 

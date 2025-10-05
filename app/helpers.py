@@ -9,7 +9,7 @@ from uuid import UUID
 import math
 
 
-def generateFriendlyCode(codeype: ClassType):
+def generateFriendlyCode(codeType: ClassType):
     """
     Generate random FriendlyCode
     """

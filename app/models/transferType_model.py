@@ -5,4 +5,4 @@ from .enums_model import TransferTypeEnum
 
 class TransferType(SQLModel, table=True):
     transfer_type_id: UUID = Field(primary_key=True, default_factory=uuid7)
-    name: TransferTypeEnum = Field(default=TransferTypeEnum.DEPOSIT)
+    name: str = Field(default=TransferTypeEnum.DEPOSIT)
