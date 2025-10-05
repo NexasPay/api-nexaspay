@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/getid/{walletTypeName}", name="Obtenha o UUID do tipo da carteira partindo do seu nome de tipo")
-async def getWalletTypeByName(session, walletTypeName: Literal["Default", "Enterprise", "Crypto", "Investment"] = "Default"):
+async def getWalletTypeByName(walletTypeName: Literal["Default", "Enterprise", "Crypto", "Investment"], session: SessionDep):
     try:
         statement = select(WalletType).where(WalletType.wallet_type_name == walletTypeName.upper())
         walletTypeId = session.exec(statement).first()
