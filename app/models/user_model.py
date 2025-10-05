@@ -7,16 +7,16 @@ from datetime import datetime
 if TYPE_CHECKING:
     from .phone_model import Phone
 
-class User(SQLModel, table=True):
+class Users(SQLModel, table=True):
     user_id: UUID = Field(primary_key=True, default_factory=uuid7)
     friendly_code: str = Field(nullable=False)
-    full_name: str = Field(nullable=False)
+    fullname: str = Field(nullable=False)
     birthdate: datetime = Field(nullable=False)
     email: str = Field(nullable=False)
     password: str = Field(nullable=False)
     cpf: str = Field(nullable=False)
     created_at: datetime = Field(default_factory=datetime.now)
-    profile_photo: str | None = Field(default=None)
+    user_photo: str | None = Field(default=None)
     is_deleted: bool = Field(default=False)
 
 

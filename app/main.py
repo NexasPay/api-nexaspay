@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from app.db.session import init_db
+from sqlmodel import select
+from app.models.user_model import Users
+from app.db.session import init_db, SessionDep
 from app.routers import user, wallet, transfer
 from fastapi.responses import RedirectResponse
 
@@ -11,9 +13,16 @@ app.include_router(transfer.router, prefix="/transfer", tags=["Transfer"])
 
 @app.on_event("startup")
 async def on_startup():
-    await init_db()
+    init_db()
 
 @app.get("/")
 async def root():
     return RedirectResponse("/docs")
 
+@app.get("/debug-db")
+def debug_db(session: SessionDep):
+    try:
+        user = session.exec(select(Users)).first()
+        return {"status": "ok", "user_found": bool(user)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}

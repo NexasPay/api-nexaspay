@@ -1,6 +1,6 @@
 fastapi[standard]
 uvicorn[standard]
-asyncpg
+psycopg2-binary
 sqlmodel
 uuid7
 boto3
