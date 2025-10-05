@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 class Phone(SQLModel, table=True):
     phone_id: UUID = Field(primary_key=True, default_factory=uuid7)
-    number: str = Field(nullable=False)
+    phone_number: str = Field(nullable=False)
     is_primary: bool = Field(default=False)
 
     user_id: UUID = Field(foreign_key="users.user_id", nullable=False)
     phone_type_id: UUID = Field(foreign_key="phonetype.phone_type_id", nullable=False)
 
-    user: "Users" = Relationship(back_populates="phones")
+    user: "Users" = Relationship(back_populates="phones", sa_relationship_kwargs={"foreign_keys": "[Phone.user_id]"})
     phone_type: "PhoneType" = Relationship(back_populates="phones")

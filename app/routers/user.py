@@ -6,6 +6,7 @@ from app.db.session import SessionDep
 from app.models.walletType_model import Wallet_Type
 from app.models.phone_model import Phone
 from app.models.phoneType_model import PhoneType
+from app.models.address_model import Address
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 from app.helpers import generateFriendlyCode, ClassType
@@ -13,6 +14,7 @@ from datetime import datetime
 from sqlmodel import select
 from app.internal.cryptography import encryptCPF
 from app.internal.AuthUser import encryptPassword
+from app.models.useraddress_model import UsersAddress
 
 router = APIRouter()
 
@@ -22,8 +24,12 @@ class ProfilePhotoModel(BaseModel):
     token: Annotated[str, File()]
 
 class CreateUserFormData(BaseModel):
-    fullname: str = Field(alias="NomeCompleto")
-    birthdate: datetime = Field(alias="DataNascimento") 
+    fullname: str = Field(alias="Nome Completo")
+    birthdate: datetime = Field(alias="Data Nascimento") 
+    street: str = Field(alias="Rua")
+    complement: str = Field(alias="Complemento")
+    address_number: str = Field(alias="Número")
+    cep: str = Field(alias="CEP")
     email: str = Field(alias="Email")
     phone: str = Field(alias="Celular")
     password: str = Field(alias="Senha")
@@ -41,22 +47,32 @@ async def getUserDetails(userFriendlyCode: str, session: SessionDep):
 @router.post("/create", name="Criando novo usuário")
 async def createNewUser(data: Annotated[CreateUserFormData, Form()], session: SessionDep):
     
-    newUser = Users(
-        user_id=uuid7(),
-        friendly_code=generateFriendlyCode(ClassType.USERS),
-        fullname=data.fullname,
-        birthdate=data.birthdate,
-        email=data.email,
-        password=encryptPassword(data.password),
-        cpf=encryptCPF(data.cpf),
-        created_at=datetime.now(),
-        user_photo=None,
-        is_deleted=False
-    )
-    # userPhone = Phone(phone_id=uuid7(), number=data.phone, is_primary=False, user_id=newUser.user_id)
-    
-    session.add(newUser)
-    session.commit()
-    session.refresh(newUser)
-    
-    return newUser
+    try:
+
+        newUser = Users(
+            user_id=uuid7(),
+            friendly_code=generateFriendlyCode(ClassType.USERS),
+            fullname=data.fullname,
+            birthdate=data.birthdate,
+            email=data.email,
+            password=encryptPassword(data.password),
+            cpf=encryptCPF(data.cpf),
+            created_at=datetime.now(),
+            user_photo=None,
+            is_deleted=False
+        )
+        uuid = 'c1266dad-16f7-44d9-9009-f5510378fb2d'
+        userPhone = Phone(phone_id=uuid7(), phone_number=data.phone, is_primary=False, user_id=newUser.user_id, phone_type_id=uuid)
+        userAddress = Address(address_id=uuid7(), street=data.street, complement=data.complement, address_number=data.address_number, cep=data.cep, city_id=None)
+        userAddressTable = UsersAddress(user_id=newUser.user_id, address_id=userAddress.address_id)
+
+        session.add(newUser)
+        session.add(userPhone)
+        session.add(userAddress)
+        session.add(userAddressTable)
+        session.commit()
+        session.refresh(newUser)
+        
+        return newUser
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"{e}")

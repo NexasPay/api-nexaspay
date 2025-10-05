@@ -1,8 +1,10 @@
 from typing import List, TYPE_CHECKING
 from sqlmodel import Field, SQLModel, Relationship
 from uuid import UUID
+from typing import Optional
 from uuid_extensions import uuid7
 from datetime import datetime
+from app.models.useraddress_model import UsersAddress
 
 if TYPE_CHECKING:
     from .phone_model import Phone
@@ -19,5 +21,6 @@ class Users(SQLModel, table=True):
     user_photo: str | None = Field(default=None)
     is_deleted: bool = Field(default=False)
 
-
-    phones: List["Phone"] = Relationship(back_populates="user")
+    addresses_link: List["UsersAddress"] = Relationship(back_populates="user")
+    addresses: List["Address"] = Relationship(link_model=UsersAddress)
+    phones: List["Phone"] = Relationship(back_populates="user", sa_relationship_kwargs={"foreign_keys": "[Phone.user_id]"})
