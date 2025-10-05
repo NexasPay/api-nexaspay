@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 
-@router.get("/getid/{walletTypeName}")
+@router.get("/getid/{walletTypeName}", name="Obtenha o UUID do tipo da carteira partindo do seu nome de tipo")
 async def getWalletTypeByName(session, walletTypeName: Literal["Default", "Enterprise", "Crypto", "Investment"] = "Default"):
     try:
         statement = select(WalletType).where(WalletType.wallet_type_name == walletTypeName.upper())
@@ -38,19 +38,41 @@ async def findWalletByFriendlyCode(walletFriendlyCode: str, session: SessionDep)
     return {"valid": True, "wallet": wallet}
 
 
-@router.patch("/addMoney/{walletFriendlyCode}", name="Adicione dinheiro a carteira de um usuário")
-async def addMoneyToUserWallet(walletFriendlyCode: str, money: float, session: SessionDep):
+@router.patch("/cashin/{walletFriendlyCode}", name="Adicione dinheiro a carteira de um usuário")
+async def cashInToUserWallet(walletFriendlyCode: str, money: float, session: SessionDep):
     try:
-        statement = select(Wallet).where(Wallet.friendly_code == walletFriendlyCode)
         wallet: Wallet = (await findWalletByFriendlyCode(walletFriendlyCode=walletFriendlyCode, session=session))["wallet"]
-
+        
+        if money <= 0 or money > 10000000:
+            raise HTTPException(status_code=400, detail="O valor que está tentando colocar ultrapassa ou é abaixo dos nossos limites")
+        
         wallet.money += money
 
         session.add(wallet)
         session.commit()
         session.refresh(wallet)
 
-        return {"is_created": True, "wallet": wallet}
+        return {"validOperation": True, "wallet": wallet}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(e)
+
+@router.patch("/cashout/{userFriendlyCode}", name="Remova dinheiro da carteira partindo de um FriendlyCode")
+async def cashOutFromUserWallet(walletFriendlyCode: str, money: float, session: SessionDep):
+    try:
+        wallet: Wallet = (await findWalletByFriendlyCode(walletFriendlyCode=walletFriendlyCode, session=session))["wallet"]
+
+        if wallet.money - money < 0:
+            raise HTTPException(status_code=400, detail="O Saldo da sua conta não pode ficar negativo.")
+
+        wallet.money -= money
+
+        session.add(wallet)
+        session.commit()
+        session.refresh(wallet)
+
+        return {"validOperation": True, "wallet": wallet}
     except HTTPException:
         raise
     except Exception as e:
