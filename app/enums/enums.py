@@ -10,9 +10,11 @@ class WalletTypeEnum(Enum):
 
 class TransferTypeEnum(Enum):
     DEPOSIT = "DEPOSIT"
-    PICKUP = "PICKUP"   # Saque
-    PAYMENT = "PAYMENT"
+    PICKUP = "PICKUP"
     TRANSFER = "TRANSFER"
+    CRYPTO = "CRYPTO"
+    INVEST = "INVEST"
+    PIX = "PIX"
 
 
 class PhoneTypeEnum(Enum):

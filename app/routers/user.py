@@ -8,8 +8,8 @@ from app.models.phone_model import Phone
 from app.models.phoneType_model import PhoneType
 from app.models.address_model import Address
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional
-from app.helpers import generateFriendlyCode, ClassType
+from typing import Annotated, Optional, Literal
+from app.helpers import generateFriendlyCode, ClassType, calculateScorePoints
 from datetime import datetime
 from sqlmodel import select
 from app.internal.cryptography import encryptCPF
@@ -75,4 +75,30 @@ async def createNewUser(data: Annotated[CreateUserFormData, Form()], session: Se
         
         return newUser
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"{e}")
+        print(e)
+        raise HTTPException(status_code=404, detail=f"Ocorreu um erro ao criar o usuário")
+
+@router.get("/score/{userFriendlyCode}")
+async def getScoreFromUserCode(userFriendlyCode: str, session: SessionDep):
+    statement = select(Users).where(Users.friendly_code == userFriendlyCode)
+    user: Users = session.exec(statement).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.", valid=False)
+    return user.score
+
+@router.put("/score/{userFriendlyCode}/increase")
+async def increaseScorePoints(userFriendlyCode:str, paymentValue: float, session: SessionDep, transferType: Literal["Deposit", "Pix", "Pickup", "Transfer", "Crypto", "Invest"] = "Pix"):
+    statement = select(Users).where(Users.friendly_code == userFriendlyCode)
+    user: Users = session.exec(statement).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Usuário não encontrado')
+
+    if paymentValue <= 0 or paymentValue > 50000:
+        raise HTTPException(status_code=400, detail='Valor inválido para operação')
+
+    user.score += calculateScorePoints(value=paymentValue, transferName=transferType, session=session)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"Score Atual": user.score, "Valid": True} 

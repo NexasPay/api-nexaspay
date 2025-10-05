@@ -17,6 +17,7 @@ class Users(SQLModel, table=True):
     email: str = Field(nullable=False)
     password: str = Field(nullable=False)
     cpf: str = Field(nullable=False)
+    score: int = Field(nullable=False, default_factory=0)
     created_at: datetime = Field(default_factory=datetime.now)
     user_photo: str | None = Field(default=None)
     is_deleted: bool = Field(default=False)
