@@ -8,6 +8,7 @@ from typing import Literal
 from sqlmodel import select
 from app.dependencies import getDbData
 from uuid_extensions import uuid7
+from uuid import UUID
 
 router = APIRouter()
 
@@ -26,6 +27,19 @@ async def getWalletTypeByName(walletTypeName: Literal["Default", "Enterprise", "
         raise
 
     return None
+
+@router.get("/find/{walletUUID}", name="Procure uma carteira partindo do UUID")
+async def findWalletByUUID(walletUUID: UUID, session: SessionDep):
+    try:
+        statement = select(Wallet).where(Wallet.wallet_id == walletUUID)
+        wallet = session.exec(statement).first()
+        if not wallet:
+            raise HTTPException(status_code=400, detail="UUID de carteira inválido ou é inexistente")
+        return wallet
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(e)
 
 @router.get("/find/{walletFriendlyCode}", name="Procure uma carteira pelo seu Friendly Code")
 async def findWalletByFriendlyCode(walletFriendlyCode: str, session: SessionDep):
@@ -52,7 +66,7 @@ async def cashInToUserWallet(walletFriendlyCode: str, money: float, session: Ses
         session.commit()
         session.refresh(wallet)
 
-        return {"validOperation": True, "wallet": wallet}
+        return {"validOperation": True, "walletCurrentMoney": wallet.money}
     except HTTPException:
         raise
     except Exception as e:
@@ -72,7 +86,7 @@ async def cashOutFromUserWallet(walletFriendlyCode: str, money: float, session: 
         session.commit()
         session.refresh(wallet)
 
-        return {"validOperation": True, "wallet": wallet}
+        return {"validOperation": True, "walletCurrentMoney": wallet.money}
     except HTTPException:
         raise
     except Exception as e:

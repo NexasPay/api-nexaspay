@@ -1,48 +1,47 @@
 from fastapi import APIRouter, HTTPException
 from app.dependencies import getDbData
+from app.db.session import SessionDep
 from sqlalchemy.future import select
+from app.helpers import generateFriendlyCode, ClassType
 from app.models.wallet_model import Wallet
 from app.models.transfer_model import Transfer
+from app.models.transferType_model import TransferType
+from app.routers.wallet import findWalletByUUID, cashInToUserWallet, getWalletTypeByName, cashOutFromUserWallet
+from uuid import UUID
+from typing import Literal
+from uuid_extensions import uuid7
+from datetime import datetime
 
 router = APIRouter()
 
-# Only for test
-@router.get("/transfer/{transfer_id}")
-async def readTransaction(transfer_id: int):
-    return {"transfer_id": transfer_id}
-    
+@router.post("{transferType}/from/{originWalletId}/{originValue}/to/{targetWalletId}")
+async def makePaymentToTarget(targetWalledId: UUID, originWalletId: UUID, originValue: int, session: SessionDep, transferType: Literal["TRANSFER", "CRYPTO", "PIX"] = "PIX"):
+    try:
+        if originValue < 0:
+            raise HTTPException(status_code=400, detail="Valor de pagamento inválido.")
+
+        targetWallet: Wallet = await findWalletByUUID(walletUUID=targetWalledId, session=session)
+        originWallet: Wallet = await findWalletByUUID(walletUUID=originWalletId, session=session)
+
+        await cashOutFromUserWallet(originWallet.friendly_code, originValue, session)
+        await cashInToUserWallet(targetWallet.friendly_code, originValue, session)
+
+        result = session.exec(select(TransferType).where(TransferType.transfer_type_name == transferType)).first()
+        transferinfos = Transfer(
+            transfer_id=uuid7(),
+            friendly_code=generateFriendlyCode(ClassType.TRANSFER),
+            amount=originValue,
+            paid_at=datetime.now(),
+            is_scheduled=False,
+            scheduled_date=None,
+            origin_wallet_id=originWallet.wallet_id,
+            target_wallet_id=targetWallet.wallet_id,
+            transfer_type_id=result.transfer_type_id
+        )
 
 
-# @router.post("/transaction/create")
-# async def createTransaction(from_wallet: str, to_wallet: str, amount: float):
-#     db = await getDbData()
-
-#     result_from = db.execute(select(Wallet).where(Wallet.address == from_wallet))
-#     result_to = db.execute(select(Wallet).where(Wallet.address == to_wallet))
-
-#     await result_from
-#     await result_to
-#     w_from = result_from.scalar_one_or_none()
-#     w_to = result_to.scalar_one_or_none()
-
-#     if not w_from or not w_to:
-#         raise HTTPException(status_code=404, detail="Transação não encontrada")
-#     if w_from.balance < amount:
-#         raise HTTPException(status_code=400, detail="Saldo insuficiente")
-
-    
-#     w_from.balance -= amount
-#     w_to.balance += amount
-
-
-#     transaction = Transaction(
-#         from_wallet=from_wallet,
-#         to_wallet=to_wallet,
-#         amount=amount,
-#         status="completed",
-#         created_at=dt.datetime.utcnow()
-#     )
-#     db.add(transaction)
-#     await db.commit()
-#     await db.refresh(transaction)
-#     return transaction
+        return {"transferValid": True, "originWalletCurrentMoney": originWallet.money, "targetWalletCurrentMoney": targetWallet.money, "TransferInfos": transferinfos}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(e)
